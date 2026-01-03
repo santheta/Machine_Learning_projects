@@ -1,22 +1,32 @@
 import streamlit as st
-import pickle
+import joblib
+import os
 
-# Load files
-model = pickle.load(open("model.pkl", "rb"))
-vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
+st.write("SERVER FILES:", os.listdir("."))
 
-st.title("📧 Email Spam Classifier")
 
-email = st.text_area("Enter the email text")
+st.set_page_config(page_title="Spam Classifier")
+
+@st.cache_resource
+def load_artifacts():
+    model = joblib.load("model.pkl")
+    vectorizer = joblib.load("vectorizer.pkl")
+    return model, vectorizer
+
+model, vectorizer = load_artifacts()
+
+st.title("Spam Message Classifier")
+
+msg = st.text_area("Enter message")
 
 if st.button("Predict"):
-    if email.strip() == "":
-        st.warning("Please enter some text")
+    if msg.strip() == "":
+        st.warning("Please enter a message")
     else:
-        vector_input = vectorizer.transform([email])
-        result = model.predict(vector_input)[0]
+        X = vectorizer.transform([msg])
+        result = model.predict(X)[0]
 
         if result == 1:
-            st.error("🚨 Spam Email")
+            st.error("Spam")
         else:
-            st.success("✅ Not Spam")
+            st.success("Not Spam")
